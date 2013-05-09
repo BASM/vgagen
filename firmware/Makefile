@@ -1,431 +1,141 @@
-# Hey Emacs, this is a -*- makefile -*-
+# Name: Makefile
+
+#DEVICE = avrt2313
+#DEVICE = at90s2313
+#DEVICE = attiny15
+#DEVICE = atmega168
+DEVICE = atmega328p
+#DEVICE = atmega88
+#DEVICE = atmega168
+#TYPEPROG=siprog -P /dev/ttyS1
+#TYPEPROG=siprog -P /dev/ttyUSB0
+TYPEPROG=stk500v2 -P avrdoper
+#TYPEPROG=stk500v2 -P /dev/ttyACM2
+AVRDUDE = avrdude -c ${TYPEPROG} -p m328p
+#AVRDUDE = avrdude -c ${TYPEPROG} -p m168
+#AVRDUDE = avrdude  -p m88 -c stk500v2 -P avrdoper
+
+#COMPILE = avr-gcc -save-temps -Wall -Os -Iusbdrv -I. -mmcu=$(DEVICE)  -L/usr/i686-pc-linux-gnu/avr/lib #-DDEBUG_LEVEL=2
+#COMPILE = avr-gcc -save-temps -Wall -Os -Iusbdrv -I. -mmcu=$(DEVICE)  -L/usr/x86_64-pc-linux-gnu/avr/lib #-DDEBUG_LEVEL=2
+#COMPILE = avr-gcc -save-temps -Os -Wall -Iusbdrv -I. -mmcu=$(DEVICE)  
+# NEVER compile the final product with debugging! Any debug output will
+# distort timing so that the specs can't be met.
+
+#OBJECTS = usbdrv/usbdrv.o usbdrv/usbdrvasm.o usbdrv/oddebug.o main.o usbtty.o
+OBJECTS = main.o
+
+DEPLIBS+=libavr
+#AVRLIBS=uart twi
+
+AVR_LDLIBS=-Llib/libavr $(foreach lib,${AVRLIBS},-l ${lib})
+AVR_CFLAGS=-Ilib/libavr/include
+AVR_DEPS=$(foreach lib,${LIBS},lib/libavr/lib${lib}.a)
+
+
+LDLIBS+=${AVR_LDLIBS}
+CFLAGS+=${AVR_CFLAGS}
+DEPS  +=${AVR_DEPS}
+
+#LIBS=ir
+DEPLIBS+=$(LIBS:%=lib%)
+LDLIBS+=$(foreach lib,${LIBS},-Llib/lib${lib} -l${lib})
+CFLAGS+=$(foreach inc,${LIBS},-Ilib/lib${inc}/include)
+DEPS=$(foreach lib,${LIBS},lib/lib${lib}/lib${lib}.a)
+
+
+COMPILE = avr-gcc -O3 -Wall -I. -mmcu=$(DEVICE) -DF_CPU=${FREQ} $(CFLAGS)
+# symbolic targets:
+all: $(DEPLIBS) main.hex
+
+${DEPLIBS}:
+	make -C lib/$@/
+#libir:
+#	make -C libs/libir/
+
+.c.o:
+	$(COMPILE) -c $< -o $@
+
+.S.o:
+	$(COMPILE) -x assembler-with-cpp -c $< -o $@
+# "-x assembler-with-cpp" should not be necessary since this is the default
+# file type for the .S (with capital S) extension. However, upper case
+# characters are not always preserved on Windows. To ensure WinAVR
+# compatibility define the file type manually.
+
+.c.s:
+	$(COMPILE) -S $< -o $@
+
+flash:	all
+	$(AVRDUDE) -U flash:w:main.hex:i
+
+
+# Fuse low byte:
+# 0xef = 1 1 1 0   1 1 1 1
+#        ^ ^ \+/   \--+--/
+#        | |  |       +------- CKSEL 3..0 (clock selection -> crystal @ 12 MHz)
+#        | |  +--------------- SUT 1..0 (BOD enabled, fast rising power)
+#        | +------------------ CKOUT (clock output on CKOUT pin -> disabled)
+#        +-------------------- CKDIV8 (divide clock by 8 -> don't divide)
 #
-# WinAVR Sample makefile written by Eric B. Weddington, Jörg Wunsch, et al.
-# Released to the Public Domain
-# Please read the make user manual!
+# Fuse high byte:
+# 0xdb = 1 1 0 1   1 0 1 1
+#        ^ ^ ^ ^   \-+-/ ^
+#        | | | |     |   +---- RSTDISBL (disable external reset -> enabled)
+#        | | | |     +-------- BODLEVEL 2..0 (brownout trigger level -> 2.7V)
+#        | | | +-------------- WDTON (watchdog timer always on -> disable)
+#        | | +---------------- SPIEN (enable serial programming -> enabled)
+#        | +------------------ EESAVE (preserve EEPROM on Chip Erase -> not preserved)
+#        +-------------------- DWEN (debug wire enable)
+# 0x5b = 0 1 0 1   1 0 1 1
+fuse_tiny2313:	# only needed for attiny2313
+	$(AVRDUDE) -U hfuse:w:0xdb:m -U lfuse:w:0xef:m
+
+# Fuse low byte:
+# 0xef = 1 1 1 0   1 1 1 1 (at2313)
+# 0xe7   1 1 1 0   0 1 1 1 
+#        ^ ^ \+/   \--+--/
+#        | |  |       +------- CKSEL 3..0 (clock selection -> crystal @ 12 MHz, FULL swing)
+#        | |  +--------------- SUT 1..0 (BOD enabled, fast rising power)
+#        | +------------------ CKOUT (clock output on CKOUT pin -> disabled)
+#        +-------------------- CKDIV8 (divide clock by 8 -> don't divide)
 #
-# Additional material for this makefile was submitted by:
-#  Tim Henigan
-#  Peter Fleury
-#  Reiner Patommel
-#  Sander Pool
-#  Frederik Rouleau
-#  Markus Pfaff
-#
-# On command line:
-#
-# make all = Make software.
-#
-# make clean = Clean out built project files.
-#
-# make coff = Convert ELF to AVR COFF (for use with AVR Studio 3.x or VMLAB).
-#
-# make extcoff = Convert ELF to AVR Extended COFF (for use with AVR Studio
-#                4.07 or greater).
-#
-# make program = Download the hex file to the device, using avrdude.  Please
-#                customize the avrdude settings below first!
-#
-# make filename.s = Just compile filename.c into the assembler code only
-#
-# To rebuild project do "make clean" then "make all".
-#
-
-
-# MCU name
-MCU = atmega16
-
-# Output format. (can be srec, ihex, binary)
-FORMAT = ihex
-
-# Target file name (without extension).
-TARGET = main
-
-
-# List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c
-
-
-# List Assembler source files here.
-# Make them always end in a capital .S.  Files ending in a lowercase .s
-# will not be considered source files but generated files (assembler
-# output from the compiler), and will be deleted upon "make clean"!
-# Even though the DOS/Win* filesystem matches both .s and .S the same,
-# it will preserve the spelling of the filenames, and gcc itself does
-# care about how the name is spelled on its command-line.
-ASRC = 
-
-
-
-# Optimization level, can be [0, 1, 2, 3, s]. 
-# 0 = turn off optimization. s = optimize for size.
-# (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
-OPT = s
-
-# Debugging format.
-# Native formats for AVR-GCC's -g are stabs [default], or dwarf-2.
-# AVR (extended) COFF requires stabs, plus an avr-objcopy run.
-DEBUG = stabs
-
-# List any extra directories to look for include files here.
-#     Each directory must be seperated by a space.
-EXTRAINCDIRS = 
-
-
-# Compiler flag to set the C Standard level.
-# c89   - "ANSI" C
-# gnu89 - c89 plus GCC extensions
-# c99   - ISO C99 standard (not yet fully implemented)
-# gnu99 - c99 plus GCC extensions
-CSTANDARD = -std=gnu99
-
-# Place -D or -U options here
-CDEFS =
-
-# Place -I options here
-CINCS =
-
-
-# Compiler flags.
-#  -g*:          generate debugging information
-#  -O*:          optimization level
-#  -f...:        tuning, see GCC manual and avr-libc documentation
-#  -Wall...:     warning level
-#  -Wa,...:      tell GCC to pass this to the assembler.
-#    -adhlns...: create assembler listing
-CFLAGS = -g$(DEBUG)
-CFLAGS += $(CDEFS) $(CINCS)
-CFLAGS += -O$(OPT)
-CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
-CFLAGS += -Wall -Wstrict-prototypes
-CFLAGS += -Wa,-adhlns=$(<:.c=.lst)
-CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
-CFLAGS += $(CSTANDARD)
-
-
-
-# Assembler flags.
-#  -Wa,...:   tell GCC to pass this to the assembler.
-#  -ahlms:    create listing
-#  -gstabs:   have the assembler create line number information; note that
-#             for use in COFF files, additional information about filenames
-#             and function names needs to be present in the assembler source
-#             files -- see avr-libc docs [FIXME: not yet described there]
-ASFLAGS = -Wa,-adhlns=$(<:.S=.lst),-gstabs 
-
-
-
-#Additional libraries.
-
-# Minimalistic printf version
-PRINTF_LIB_MIN = -Wl,-u,vfprintf -lprintf_min
-
-# Floating point printf version (requires MATH_LIB = -lm below)
-PRINTF_LIB_FLOAT = -Wl,-u,vfprintf -lprintf_flt
-
-PRINTF_LIB = 
-
-# Minimalistic scanf version
-SCANF_LIB_MIN = -Wl,-u,vfscanf -lscanf_min
-
-# Floating point + %[ scanf version (requires MATH_LIB = -lm below)
-SCANF_LIB_FLOAT = -Wl,-u,vfscanf -lscanf_flt
-
-SCANF_LIB = 
-
-MATH_LIB = -lm
-
-# External memory options
-
-# 64 KB of external RAM, starting after internal RAM (ATmega128!),
-# used for variables (.data/.bss) and heap (malloc()).
-#EXTMEMOPTS = -Wl,-Tdata=0x801100,--defsym=__heap_end=0x80ffff
-
-# 64 KB of external RAM, starting after internal RAM (ATmega128!),
-# only used for heap (malloc()).
-#EXTMEMOPTS = -Wl,--defsym=__heap_start=0x801100,--defsym=__heap_end=0x80ffff
-
-EXTMEMOPTS =
-
-# Linker flags.
-#  -Wl,...:     tell GCC to pass this to linker.
-#    -Map:      create map file
-#    --cref:    add cross reference to  map file
-LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
-LDFLAGS += $(EXTMEMOPTS)
-LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
-
-
-
-
-# Programming support using avrdude. Settings and variables.
-
-# Programming hardware: alf avr910 avrisp bascom bsd 
-# dt006 pavr picoweb pony-stk200 sp12 stk200 stk500
-#
-# Type: avrdude -c ?
-# to get a full listing.
-#
-AVRDUDE_PROGRAMMER = avrisp
-
-# com1 = serial port. Use lpt1 to connect to parallel port.
-AVRDUDE_PORT = com2
-
-AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
-#AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
-
-
-# Uncomment the following if you want avrdude's erase cycle counter.
-# Note that this counter needs to be initialized first using -Yn,
-# see avrdude manual.
-#AVRDUDE_ERASE_COUNTER = -y
-
-# Uncomment the following if you do /not/ wish a verification to be
-# performed after programming the device.
-#AVRDUDE_NO_VERIFY = -V
-
-# Increase verbosity level.  Please use this when submitting bug
-# reports about avrdude. See <http://savannah.nongnu.org/projects/avrdude> 
-# to submit bug reports.
-AVRDUDE_VERBOSE = -v -v
-
-AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
-AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
-AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
-AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
-
-
-
-# ---------------------------------------------------------------------------
-
-# Define directories, if needed.
-DIRAVR = c:/winavr
-DIRAVRBIN = $(DIRAVR)/bin
-DIRAVRUTILS = $(DIRAVR)/utils/bin
-DIRINC = .
-DIRLIB = $(DIRAVR)/avr/lib
-
-
-# Define programs and commands.
-SHELL = sh
-CC = avr-gcc
-OBJCOPY = avr-objcopy
-OBJDUMP = avr-objdump
-SIZE = avr-size
-NM = avr-nm
-AVRDUDE = avrdude
-REMOVE = rm -f
-COPY = cp
-
-
-
-
-# Define Messages
-# English
-MSG_ERRORS_NONE = Errors: none
-MSG_BEGIN = -------- begin --------
-MSG_END = --------  end  --------
-MSG_SIZE_BEFORE = Size before: 
-MSG_SIZE_AFTER = Size after:
-MSG_COFF = Converting to AVR COFF:
-MSG_EXTENDED_COFF = Converting to AVR Extended COFF:
-MSG_FLASH = Creating load file for Flash:
-MSG_EEPROM = Creating load file for EEPROM:
-MSG_EXTENDED_LISTING = Creating Extended Listing:
-MSG_SYMBOL_TABLE = Creating Symbol Table:
-MSG_LINKING = Linking:
-MSG_COMPILING = Compiling:
-MSG_ASSEMBLING = Assembling:
-MSG_CLEANING = Cleaning project:
-
-
-
-
-# Define all object files.
-OBJ = $(SRC:.c=.o) $(ASRC:.S=.o) 
-
-# Define all listing files.
-LST = $(ASRC:.S=.lst) $(SRC:.c=.lst)
-
-
-# Compiler flags to generate dependency files.
-GENDEPFLAGS = -Wp,-M,-MP,-MT,$(*F).o,-MF,.dep/$(@F).d
-
-
-# Combine all necessary flags and optional flags.
-# Add target processor to flags.
-ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS)
-ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
-
-
-
-
-
-# Default target.
-all: begin gccversion sizebefore build sizeafter finished end
-
-build: elf hex eep lss sym coff
-
-elf: $(TARGET).elf
-hex: $(TARGET).hex
-eep: $(TARGET).eep
-lss: $(TARGET).lss 
-sym: $(TARGET).sym
-
-
-
-# Eye candy.
-# AVR Studio 3.x does not check make's exit code but relies on
-# the following magic strings to be generated by the compile job.
-begin:
-	@echo
-	@echo $(MSG_BEGIN)
-
-finished:
-	@echo $(MSG_ERRORS_NONE)
-
-end:
-	@echo $(MSG_END)
-	@echo
-
-
-# Display size of file.
-HEXSIZE = $(SIZE) --target=$(FORMAT) $(TARGET).hex
-ELFSIZE = $(SIZE) -A $(TARGET).elf
-sizebefore:
-	@if [ -f $(TARGET).elf ]; then echo; echo $(MSG_SIZE_BEFORE); $(ELFSIZE); echo; fi
-
-sizeafter:
-	@if [ -f $(TARGET).elf ]; then echo; echo $(MSG_SIZE_AFTER); $(ELFSIZE); echo; fi
-
-
-
-# Display compiler version information.
-gccversion : 
-	@$(CC) --version
-
-
-
-# Program the device.  
-program: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
-
-
-
-
-# Convert ELF to COFF for use in debugging / simulating in AVR Studio or VMLAB.
-COFFCONVERT=$(OBJCOPY) --debugging \
---change-section-address .data-0x800000 \
---change-section-address .bss-0x800000 \
---change-section-address .noinit-0x800000 \
---change-section-address .eeprom-0x810000 
-
-
-coff: $(TARGET).elf
-	@echo
-	@echo $(MSG_COFF) $(TARGET).cof
-	$(COFFCONVERT) -O coff-avr $< $(TARGET).cof
-
-
-extcoff: $(TARGET).elf
-	@echo
-	@echo $(MSG_EXTENDED_COFF) $(TARGET).cof
-	$(COFFCONVERT) -O coff-ext-avr $< $(TARGET).cof
-
-
-
-# Create final output files (.hex, .eep) from ELF output file.
-%.hex: %.elf
-	@echo
-	@echo $(MSG_FLASH) $@
-	$(OBJCOPY) -O $(FORMAT) -R .eeprom $< $@
-
-%.eep: %.elf
-	@echo
-	@echo $(MSG_EEPROM) $@
-	-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" \
-	--change-section-lma .eeprom=0 -O $(FORMAT) $< $@
-
-# Create extended listing file from ELF output file.
-%.lss: %.elf
-	@echo
-	@echo $(MSG_EXTENDED_LISTING) $@
-	$(OBJDUMP) -h -S $< > $@
-
-# Create a symbol table from ELF output file.
-%.sym: %.elf
-	@echo
-	@echo $(MSG_SYMBOL_TABLE) $@
-	$(NM) -n $< > $@
-
-
-
-# Link: create ELF output file from object files.
-.SECONDARY : $(TARGET).elf
-.PRECIOUS : $(OBJ)
-%.elf: $(OBJ)
-	@echo
-	@echo $(MSG_LINKING) $@
-	$(CC) $(ALL_CFLAGS) $(OBJ) --output $@ $(LDFLAGS)
-
-
-# Compile: create object files from C source files.
-%.o : %.c
-	@echo
-	@echo $(MSG_COMPILING) $<
-	$(CC) -c $(ALL_CFLAGS) $< -o $@ 
-
-
-# Compile: create assembler files from C source files.
-%.s : %.c
-	$(CC) -S $(ALL_CFLAGS) $< -o $@
-
-
-# Assemble: create object files from assembler source files.
-%.o : %.S
-	@echo
-	@echo $(MSG_ASSEMBLING) $<
-	$(CC) -c $(ALL_ASFLAGS) $< -o $@
-
-
-
-# Target: clean project.
-clean: begin clean_list finished end
-
-clean_list :
-	@echo
-	@echo $(MSG_CLEANING)
-	$(REMOVE) $(TARGET).hex
-	$(REMOVE) $(TARGET).eep
-	$(REMOVE) $(TARGET).obj
-	$(REMOVE) $(TARGET).cof
-	$(REMOVE) $(TARGET).elf
-	$(REMOVE) $(TARGET).map
-	$(REMOVE) $(TARGET).obj
-	$(REMOVE) $(TARGET).a90
-	$(REMOVE) $(TARGET).sym
-	$(REMOVE) $(TARGET).lnk
-	$(REMOVE) $(TARGET).lss
-	$(REMOVE) $(OBJ)
-	$(REMOVE) $(LST)
-	$(REMOVE) $(SRC:.c=.s)
-	$(REMOVE) $(SRC:.c=.d)
-	$(REMOVE) .dep/*
-
-
-
-# Include the dependency files.
--include $(shell mkdir .dep 2>/dev/null) $(wildcard .dep/*)
-
-
-# Listing of phony targets.
-.PHONY : all begin finish end sizebefore sizeafter gccversion \
-build elf hex eep lss sym coff extcoff \
-clean clean_list program
-
-
-
-
-
-
-
+# Fuse high byte:
+# 0xdb = 1 1 0 1   1 0 1 1 (at2313)
+# 0xdf   1 1 0 1   1 1 1 1
+#        ^ ^ ^ ^   \-+-/ ^
+#        | | | |     |   +---- (not, it at2313) RSTDISBL (disable external reset -> enabled)
+#        | | | |     +-------- (not, it at2313) BODLEVEL 2..0 (brownout trigger level -> 2.7V)
+#        | | | +-------------- (not, it at2313) WDTON (watchdog timer always on -> disable)
+#        | | +---------------- (not, it at2313) SPIEN (enable serial programming -> enabled)
+#        | +------------------ (not, it at2313) EESAVE (preserve EEPROM on Chip Erase -> not preserved)
+#        +-------------------- (not, it at2313) DWEN (debug wire enable)
+# 0x5b = 0 1 0 1   1 0 1 1
+
+fuse_mega88:	# only needed for atmega88
+	$(AVRDUDE) -U hfuse:w:0xdf:m -U lfuse:w:0xe7:m
+
+fuse_mega168:	# only needed for atmega168
+	$(AVRDUDE) -U hfuse:w:0xdf:m -U lfuse:w:0xe7:m
+
+## USE external 12 mhz                   //
+fuse_mega328P:	# only needed for atmega328P
+	$(AVRDUDE) -U hfuse:w:0xdf:m -U lfuse:w:0xf7:m
+
+clean:
+	rm -f main.hex main.lst main.obj main.cof main.list main.map main.eep.hex main.bin *.o usbdrv/*.o main.s usbdrv/oddebug.s usbdrv/usbdrv.s
+
+main.bin:	$(OBJECTS) $(DEPS)
+	$(COMPILE) -o main.bin $(OBJECTS) $(LDLIBS) 
+
+main.hex:	main.bin
+	rm -f main.hex main.eep.hex
+	avr-objcopy -j .text -j .data -O ihex main.bin main.hex
+	./checksize main.bin
+# do the checksize script as our last action to allow successful compilation
+# on Windows with WinAVR where the Unix commands will fail.
+
+disasm:	main.bin
+	avr-objdump -Sd main.bin
+
+cpp:
+	$(COMPILE) -E main.c
