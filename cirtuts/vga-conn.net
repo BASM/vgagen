@@ -1,0 +1,70 @@
+# EESchema Netlist Version 1.1 created  Ср. 08 мая 2013 22:03:35
+(
+ ( /518A92D2 $noname  P3 I2C {Lib=CONN_2}
+  (    1 N-000010 )
+  (    2 /SCL )
+ )
+ ( /518A8FF6 $noname  P1 GND {Lib=CONN_1}
+  (    1 GND )
+ )
+ ( /518A8FF7 $noname  P2 HV-SYNC {Lib=CONN_2}
+  (    1 N-000005 )
+  (    2 /H-SYNC )
+ )
+ ( /518A8FF8 $noname  K1 RGB {Lib=CONN_3}
+  (    1 /RED )
+  (    2 /GREEN )
+  (    3 /BLUE )
+ )
+ ( /00000000 $noname  J1 VGA {Lib=VGA}
+  (    1 /RED )
+  (    2 /GREEN )
+  (    3 /BLUE )
+  (    4 ? )
+  (    5 GND )
+  (    6 GND )
+  (    7 GND )
+  (    8 GND )
+  (    9 GND )
+  (   10 GND )
+  (   11 GND )
+  (   12 /SCL )
+  (   13 /H-SYNC )
+  (   14 N-000005 )
+  (   15 N-000010 )
+ )
+)
+*
+{ Pin List by Nets
+Net 2 "GND" "GND"
+ J1 10
+ J1 8
+ J1 6
+ J1 5
+ J1 9
+ J1 11
+ J1 7
+ P1 1
+Net 3 "/RED" "RED"
+ J1 1
+ K1 1
+Net 5 "" ""
+ J1 14
+ P2 1
+Net 6 "/H-SYNC" "H-SYNC"
+ J1 13
+ P2 2
+Net 7 "/SCL" "SCL"
+ P3 2
+ J1 12
+Net 8 "/GREEN" "GREEN"
+ K1 2
+ J1 2
+Net 9 "/BLUE" "BLUE"
+ K1 3
+ J1 3
+Net 10 "" ""
+ P3 1
+ J1 15
+}
+#End
