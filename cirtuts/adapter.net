@@ -1,0 +1,151 @@
+# EESchema Netlist Version 1.1 created  Чт. 09 мая 2013 03:21:55
+(
+ ( /518AB0C4 PIN_ARRAY_3X1 K1 CONN_3
+  ( 1 N-000018 )
+  ( 2 N-000020 )
+  ( 3 N-000019 )
+ )
+ ( /518AD09E PIN_ARRAY_2X1 P1 VHSYNC_IN
+  ( 1 N-000014 )
+  ( 2 N-000011 )
+ )
+ ( /518AD09F PIN_ARRAY_5x1 P2 RDB_ONOFFBR
+  ( 1 N-000002 )
+  ( 2 N-000017 )
+  ( 3 N-000016 )
+  ( 4 N-000015 )
+  ( 5 N-000021 )
+ )
+ ( /518AD182 PIN_ARRAY_1 P3 CONN_1
+  ( 1 GND )
+ )
+ ( /518AB119 PIN_ARRAY_1 P4 CONN_1
+  ( 1 GND )
+ )
+ ( /518AB130 PIN_ARRAY_2X1 P5 VHSYNC_OUT
+  ( 1 N-000012 )
+  ( 2 N-000013 )
+ )
+ ( /00000000 SOT23GDS Q1 MOSFET_N
+  ( D N-000018 )
+  ( G N-000015 )
+  ( S GND )
+ )
+ ( /518ACE12 SOT23GDS Q2 MOSFET_N
+  ( D N-000006 )
+  ( G N-000002 )
+  ( S GND )
+ )
+ ( /518AC709 SOT23GDS Q3 MOSFET_N
+  ( D N-000020 )
+  ( G N-000016 )
+  ( S GND )
+ )
+ ( /518ACE18 SOT23GDS Q4 MOSFET_N
+  ( D N-000007 )
+  ( G N-000002 )
+  ( S GND )
+ )
+ ( /518ACE1B SOT23GDS Q5 MOSFET_N
+  ( D N-000008 )
+  ( G N-000002 )
+  ( S GND )
+ )
+ ( /518AC711 SOT23GDS Q6 MOSFET_N
+  ( D N-000019 )
+  ( G N-000017 )
+  ( S GND )
+ )
+ ( /518AD0A0 SM1206 R1 R68
+  ( 1 N-000018 )
+  ( 2 N-000021 )
+ )
+ ( /518AC581 SM1206 R2 R68
+  ( 1 N-000020 )
+  ( 2 N-000021 )
+ )
+ ( /518AC583 SM1206 R3 R68
+  ( 1 N-000019 )
+  ( 2 N-000021 )
+ )
+ ( /518ACE50 R4 R4 R91
+  ( 1 N-000018 )
+  ( 2 N-000006 )
+ )
+ ( /518ACE53 SM1206 R5 R91
+  ( 1 N-000020 )
+  ( 2 N-000007 )
+ )
+ ( /518ACE55 SM1206 R6 R91
+  ( 1 N-000019 )
+  ( 2 N-000008 )
+ )
+ ( /518AD335 SM1206 R7 R0
+  ( 1 N-000012 )
+  ( 2 N-000011 )
+ )
+ ( /518AD337 SM1206 R8 R0
+  ( 1 N-000013 )
+  ( 2 N-000014 )
+ )
+)
+*
+{ Allowed footprints by component:
+$component R1
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R2
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R3
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R4
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R5
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R6
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R7
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R8
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$endfootprintlist
+}

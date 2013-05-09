@@ -1,0 +1,143 @@
+Cmp-Mod V01 Created by CvPcb (2011-nov-30)-stable date = Чт. 09 мая 2013 03:21:55
+
+BeginCmp
+TimeStamp = /518AB0C4;
+Reference = K1;
+ValeurCmp = CONN_3;
+IdModule  = PIN_ARRAY_3X1;
+EndCmp
+
+BeginCmp
+TimeStamp = /518AD09E;
+Reference = P1;
+ValeurCmp = VHSYNC_IN;
+IdModule  = PIN_ARRAY_2X1;
+EndCmp
+
+BeginCmp
+TimeStamp = /518AD09F;
+Reference = P2;
+ValeurCmp = RDB_ONOFFBR;
+IdModule  = PIN_ARRAY_5x1;
+EndCmp
+
+BeginCmp
+TimeStamp = /518AD182;
+Reference = P3;
+ValeurCmp = CONN_1;
+IdModule  = PIN_ARRAY_1;
+EndCmp
+
+BeginCmp
+TimeStamp = /518AB119;
+Reference = P4;
+ValeurCmp = CONN_1;
+IdModule  = PIN_ARRAY_1;
+EndCmp
+
+BeginCmp
+TimeStamp = /518AB130;
+Reference = P5;
+ValeurCmp = VHSYNC_OUT;
+IdModule  = PIN_ARRAY_2X1;
+EndCmp
+
+BeginCmp
+TimeStamp = /00000000;
+Reference = Q1;
+ValeurCmp = MOSFET_N;
+IdModule  = SOT23GDS;
+EndCmp
+
+BeginCmp
+TimeStamp = /518ACE12;
+Reference = Q2;
+ValeurCmp = MOSFET_N;
+IdModule  = SOT23GDS;
+EndCmp
+
+BeginCmp
+TimeStamp = /518AC709;
+Reference = Q3;
+ValeurCmp = MOSFET_N;
+IdModule  = SOT23GDS;
+EndCmp
+
+BeginCmp
+TimeStamp = /518ACE18;
+Reference = Q4;
+ValeurCmp = MOSFET_N;
+IdModule  = SOT23GDS;
+EndCmp
+
+BeginCmp
+TimeStamp = /518ACE1B;
+Reference = Q5;
+ValeurCmp = MOSFET_N;
+IdModule  = SOT23GDS;
+EndCmp
+
+BeginCmp
+TimeStamp = /518AC711;
+Reference = Q6;
+ValeurCmp = MOSFET_N;
+IdModule  = SOT23GDS;
+EndCmp
+
+BeginCmp
+TimeStamp = /518AD0A0;
+Reference = R1;
+ValeurCmp = R68;
+IdModule  = SM1206;
+EndCmp
+
+BeginCmp
+TimeStamp = /518AC581;
+Reference = R2;
+ValeurCmp = R68;
+IdModule  = SM1206;
+EndCmp
+
+BeginCmp
+TimeStamp = /518AC583;
+Reference = R3;
+ValeurCmp = R68;
+IdModule  = SM1206;
+EndCmp
+
+BeginCmp
+TimeStamp = /518ACE50;
+Reference = R4;
+ValeurCmp = R91;
+IdModule  = R4;
+EndCmp
+
+BeginCmp
+TimeStamp = /518ACE53;
+Reference = R5;
+ValeurCmp = R91;
+IdModule  = SM1206;
+EndCmp
+
+BeginCmp
+TimeStamp = /518ACE55;
+Reference = R6;
+ValeurCmp = R91;
+IdModule  = SM1206;
+EndCmp
+
+BeginCmp
+TimeStamp = /518AD335;
+Reference = R7;
+ValeurCmp = R0;
+IdModule  = SM1206;
+EndCmp
+
+BeginCmp
+TimeStamp = /518AD337;
+Reference = R8;
+ValeurCmp = R0;
+IdModule  = SM1206;
+EndCmp
+
+EndListe
