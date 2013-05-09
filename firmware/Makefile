@@ -43,7 +43,7 @@ CFLAGS+=$(foreach inc,${LIBS},-Ilib/lib${inc}/include)
 DEPS=$(foreach lib,${LIBS},lib/lib${lib}/lib${lib}.a)
 
 
-COMPILE = avr-gcc -O3 -Wall -I. -mmcu=$(DEVICE) -DF_CPU=${FREQ} $(CFLAGS)
+COMPILE = avr-gcc -save-temps -O3 -Wall -I. -mmcu=$(DEVICE) -DF_CPU=${FREQ} $(CFLAGS)
 # symbolic targets:
 all: $(DEPLIBS) main.hex
 

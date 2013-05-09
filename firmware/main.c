@@ -19,8 +19,6 @@
 #define hsync() {PORTB|=2; _delay_us(4); PORTB&=~2;}
 #endif
 
-const char byte[2] PROGMEM={0x55,0xee};
-
 int line=0;
 
 ISR(TIMER1_COMPA_vect)
@@ -38,27 +36,103 @@ ISR(TIMER1_COMPA_vect)
 
   hsync();
 
-  char b;
-  if (line%2) {
-    b=byte[0];
-    b=byte[1];
-  }
+  char b[8];
+  memcpy(b,"\x55\x55\xaa\xf0",4);
 
-  int i=0;
-  if ( (line>40) && (line<520) ){
-    _delay_us(2);//border
+  if ( (line>50) && (line<90) ){
+    _delay_us(3);//border
+    char a=1;
+    asm(
+        "out 0x0b,%0\n\t"
+        "lsr %0\n\t"
+        "out 0x0b,%0\n\t"
+        "lsr %0\n\t"
+        "out 0x0b,%0\n\t"
+        "lsr %0\n\t"
+        "out 0x0b,%0\n\t"
+        "lsr %0\n\t"
+        "out 0x0b,%0\n\t"
+        "lsr %0\n\t"
+        "out 0x0b,%0\n\t"
+        "lsr %0\n\t"
+        "out 0x0b,%0\n\t"
+        "lsr %0\n\t"
+        "out 0x0b,%0\n\t"
+        "lsr %0\n\t"
+
+        "out 0x0b,%1\n\t"
+        "lsr %1\n\t"
+        "out 0x0b,%1\n\t"
+        "lsr %1\n\t"
+        "out 0x0b,%1\n\t"
+        "lsr %1\n\t"
+        "out 0x0b,%1\n\t"
+        "lsr %1\n\t"
+        "out 0x0b,%1\n\t"
+        "lsr %1\n\t"
+        "out 0x0b,%1\n\t"
+        "lsr %1\n\t"
+        "out 0x0b,%1\n\t"
+        "lsr %1\n\t"
+        "out 0x0b,%1\n\t"
+        "lsr %1\n\t"
+        
+        "out 0x0b,%2\n\t"
+        "lsr %2\n\t"
+        "out 0x0b,%2\n\t"
+        "lsr %2\n\t"
+        "out 0x0b,%2\n\t"
+        "lsr %2\n\t"
+        "out 0x0b,%2\n\t"
+        "lsr %2\n\t"
+        "out 0x0b,%2\n\t"
+        "lsr %2\n\t"
+        "out 0x0b,%2\n\t"
+        "lsr %2\n\t"
+        "out 0x0b,%2\n\t"
+        "lsr %2\n\t"
+        "out 0x0b,%2\n\t"
+        "lsr %2\n\t"
+        
+        "out 0x0b,%3\n\t"
+        "lsr %3\n\t"
+        "out 0x0b,%3\n\t"
+        "lsr %3\n\t"
+        "out 0x0b,%3\n\t"
+        "lsr %3\n\t"
+        "out 0x0b,%3\n\t"
+        "lsr %3\n\t"
+        "out 0x0b,%3\n\t"
+        "lsr %3\n\t"
+        "out 0x0b,%3\n\t"
+        "lsr %3\n\t"
+        "out 0x0b,%3\n\t"
+        "lsr %3\n\t"
+        "out 0x0b,%3\n\t"
+        "lsr %3\n\t"
+
+        "out 0x0b,0\n\t"
+        :
+        :"r"(b[0]),"r"(b[1]),"r"(b[2]),"r"(b[3])
+        :);
+    return ;
+  }//*/
+        //,"r"(b[1]),"r"(b[2]),"r"(b[3])
+  if ( (line>100) && (line<520) ){
+    _delay_us(3);//border
 
     int k;
     for (k=0; k<16; k++) {
-      PORTB|=(1<<2);
-      _delay_loop_1(10);
+      //PORTB|=(1<<2);
+      PORTD=1;
+      _delay_loop_1(7);
       //_delay_us(1);//border
-      //PORTB&=~(1<<2);
+      PORTD=0;
       PORTC++;
     }
-  }
+  }//*/
   //_delay_loop_1(4);
-  PORTB&=~(1<<2);
+  //PORTB&=~(1<<2);
 }
 
 int main(void)
@@ -75,8 +149,11 @@ int main(void)
 
   sei();
 
+  DDRD=~0;
+  PORTD=~0;
+
   DDRB=~0;
-  PORTB=1;
+  //PORTB=1;
 
   DDRC=~0;
   PORTC=0;//=0xff;
